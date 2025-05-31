@@ -6,8 +6,52 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://library-management-frontend-ruby.vercel.app/",
+  "https://library-management-frontend-git-main-nguyen-quang-nams-projects.vercel.app/",
+  "https://library-management-frontend-6brewhvlu.vercel.app/",
+];
+
+// CORS configuration
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in allowedOrigins or is a vercel.app domain
+      if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      // Reject requests from other origins
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
+
+// Handle preflight requests
+app.options(
+  "*",
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({extended:false}))
 app.use(cookieParser());
